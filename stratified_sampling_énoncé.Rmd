@@ -1,0 +1,120 @@
+---
+title: "Sondage stratifié"
+output:
+  html_document:
+    df_print: paged
+  html_notebook:
+    theme: cosmo
+    paged.print: yes
+    number_sections: yes
+    smart: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+NB : on rappelle que la variance d'une variable aléatoire suivant une loi de Bernoulli de paramètre $\pi = P(\textit{succès})$ est $\pi \times (1 - \pi)$
+
+# Introduction
+
+**1.1 Charger le fichier`sond_strat.RData` contenant le tableau de données `sero` ou générer ces données à l'aide du code suivant :**
+
+```{r}
+library(tidyverse)
+library(purrr)
+set.seed(1234)
+N <- 1e6
+sero <- data.frame(risk = rbinom(N, 1, .3)) %>%
+  mutate(sero = rbinom(N, 1, ifelse(risk == 1, .45, .01)),
+         rowname = row_number())
+
+# load("sond_strat.RData")
+```
+
+Ce tableau représente les données d'une population de $10^6$ sujets. Les colonnes sont :\
+- `risk` : le niveau de risque d'infection par un agent infectieux fictif (`1` = risque élevé, `0` = risque faible)\
+- `sero` : le statut de séropositivité des sujets (`1` = positif, `0` = négatif)
+
+On cherche à estimer la séroprévalence, supposée inconnue, dans cette population. On dispose pour cela d'un budget permettant d'inclure 500 sujets chez lesquels une sérologie sera pratiquée. Le niveau de risque de chaque individu de la population est supposé connu et on sait que la séroprévalence est plus élevée chez les sujets à risque élevé que chez les sujets à risque faible.
+
+**1.2. Quelle est la proportion de sujets à risque élevé (connue) dans la population ?**
+
+`r round(mean(sero$sero), 3)`
+
+**1.3. Quelle est la séroprévalence "vraie" (inconnue) que l'on cherche à estimer dans la population ?**
+
+`r 0.3 * 0.45 + 0.7 * 0.01`
+
+**1.4. Quelle est la séroprévalence (supposée inconnue) dans la population à risque élevé et dans celle à risque faible ?**
+
+`0.45 pour risque élevée et 0.01 pour risque faible`
+
+# Sondage aléatoire simple
+
+**2.1. Tirer au sort 500 sujets dans la population selon un sondage aléatoire simple sans remise. Quelle est la séroprévalence estimée dans la population ?**
+
+```{r}
+nb_lignes <- sample(N, 500)
+mean(sero[nb_lignes, "sero"])
+```
+
+**2.2. Reroduire un grand nombre de fois l'estimation précédente sur différents tirages de 500 sujets. Quels sont les bornes et la largeur de l''intervalle recouvrant 95% des séroprévalences estimées ?**
+
+```{r}
+preva_sero <- map_dbl(1:1000, ~ mean(sero[sample(N, 500), "sero"]))
+quantile(preva_sero, probs = c(0.025, 0.5, 0.975))
+mean(preva_sero)
+```
+
+# Sondage stratifié
+
+**3.1. Tirer au sort** $n_1 = 250$ sujets à risque élevé et $n_0 = 500 - n1 = 250$ sujets à risque faible et estimer la séroprévalence globale dans la population.
+
+```{r}
+nb_lignes250 <- c(sample(sero[sero$risk == 1, "rowname"], 250), sample(sero[sero$risk == 0, "rowname"], 250))
+mean(sero[nb_lignes250, "sero"])
+```
+
+**3.2. Reroduire un grand nombre de fois l'estimation précédente sur différents tirages de** $n_1 = 250$ et $n_0 = 500 - n1$ sujets. Quels sont les bornes et la largeur de l''intervalle recouvrant 95% des séroprévalences estimées ?
+
+```{r}
+preva_sero250 <- map(1:1000, ~ c(sample(sero[sero$risk == 1, "rowname"], 250), sample(sero[sero$risk == 0, "rowname"], 250))) %>% 
+  map_dbl(~ mean(sero[.x, "sero"]))
+quantile(preva_sero250, probs = c(0.025, 0.975))
+```
+
+**3.3. En prenant pour critère la largeur de l'intervalle à 95% des estimations, cette méthode permet-elle d'obtenir des estimations plus proches de la séroprévalence théorique que le sondage aléatoire simple ?**
+
+Non !
+
+**3.4. Quelle valeur de** $n_1 \in [[ 1, ..., 500 ]]$ permet d'optimiser la précision des estimations ?
+
+```{r}
+# df <- data.frame(matrix(ncol = 2, nrow = 500))
+# names(df) <- c("rownombre", "moyenne")
+# for (i in 1:500) {
+#   cat(i, "\n")
+#   df[i, 2] <- map(1:100, ~ c(sample(sero[sero$risk == 1, "rowname"], i), sample(sero[sero$risk == 0, "rowname"], 500 - i))) %>% 
+#     map_dbl(~ mean(sero[.x, "sero"])) %>% 
+#     mean()
+#   df[i, 1] <- i
+# }
+# save(df, file = "sim_n1.Rdata")
+load("sim_n1.Rdata")
+df <- df %>% 
+  mutate(diff = abs(moyenne - 0.142))
+df %>% 
+  ggplot(aes(diff)) +
+  geom_histogram()
+df %>% 
+  slice_min(diff, n = 10)
+```
+
+**148**
+
+**3.5. Quelle valeur de** $n_1$ correspondrait à l'allocation de Neyman ? On supposera connue la variance de la séroprévalence pour chaque niveau de risque (sinon, on l'aurait estimée d'après un échantillon).
+
+292
+
+Formule : $n_h = \frac {N_h S_h} {\sum_{h=1}^{H} N_h S_h} \times n$ avec H = 2 et les variances estimées par les lois binomiales.
