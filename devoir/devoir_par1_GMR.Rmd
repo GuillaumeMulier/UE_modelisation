@@ -100,6 +100,7 @@ On souhaite à présent utiliser l'information issue de toutes les cohortes pour
 
 Avec la même hypothèse que pour la question 1, pourquoi ne peut-on pas simplement réaliser cette estimation sur l'ensemble de l'échantillon en utilisant directement les poids de sondage proposés ?
 
+
 **Quelle(s) information(s) serait nécessaire pour réaliser cette estimation ?**
 
 On fait donc l'hypothèse que la population reconstruite de chaque cohorte est représentative de sa population cible.
