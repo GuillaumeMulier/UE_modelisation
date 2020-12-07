@@ -90,7 +90,7 @@ coco %>%
 ```
 
 Voilà donc dans le tableau ci-dessus les prévalences dans les pseudo-populations recréées à l'aide des poids. Pour l'intervalle de confiance, j'ai pris la formule :
-$$p \pm \sqrt{\frac{p \times (1-p)}{n}}$$
+$$p \pm z_{\alpha/2} \times \sqrt{\frac{p \times (1-p)}{n}}$$
 avec p la prévalence estimée et n l'effectif de la pseudo-population. Mais je ne sais pas si la formule s'applique bien dans ce cas.
 
 
@@ -104,6 +104,6 @@ Avec la même hypothèse que pour la question 1, pourquoi ne peut-on pas simplem
 
 On fait donc l'hypothèse que la population reconstruite de chaque cohorte est représentative de sa population cible.
 
-Mais l'échantillon total n'est pas représentatif de la population des 20-90 ans car certaines populations cibles se recoupent. Il nous manquerait la répartition en âge de la population totale par exemple pour essayer d'estimer la prévalence dans la population totale soit par standardisation directe ou indirecte de façon analogue à ce qui peut-être fait pour les incidences ?
+Mais l'échantillon total n'est pas représentatif de la population des 20-90 ans car certaines populations cibles se recoupent. Il nous manquerait la répartition en âge et en sexe de la population totale par exemple pour essayer d'estimer la prévalence dans la population totale soit par standardisation directe ou indirecte de façon analogue à ce qui peut-être fait pour les incidences ?
 
-Aussi, avec les cohortes C, D et E, on a à priori un échantillon représentatif de la population de 25 à 90 ans, comme si c'était stratifié sur 25 à 70 ans et 70 à 90 ans. On pourrait essayer de refaire une cohorte sur les 20 à 25 ans et reconstruire un sondage stratifié sur l'âge peut-être et utiliser l'estimateur d'Horvitz-Thomson.
+Aussi, avec les cohortes C, D et E, on a à priori un échantillon représentatif de la population de 25 à 90 ans, comme si c'était stratifié sur 25 à 70 ans et 70 à 90 ans, et en plus stratifié selon le sexe pour les 70 à 90 ans. On pourrait essayer de refaire une cohorte sur les 20 à 25 ans. Aussi, il faudrait sûrement encore connaître la répartition en sexe dans la population totale pour pouvoir reconstruire un pseudo-échantillon total. On  reconstruirait un sondage stratifié sur l'âge et le sexe pour utiliser l'estimateur d'Horvitz-Thomson.
